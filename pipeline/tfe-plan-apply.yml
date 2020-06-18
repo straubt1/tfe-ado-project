@@ -40,7 +40,7 @@ stages:
             inputs:
               scriptSource: "filePath"
               scriptPath: "pipeline/createConfigurationVersion.py"
-              arguments: "-tfeToken $(tfeToken) -tfeSpeculativePlan True"
+              arguments: "-tfeToken $(tfeToken)"
           - task: PythonScript@0
             displayName: "Create Run"
             inputs:

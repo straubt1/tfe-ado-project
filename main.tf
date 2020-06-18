@@ -31,6 +31,9 @@ resource "null_resource" "repo-clean-import" {
     check = join("", [
       for file in fileset("${abspath(path.module)}/pipeline", "*") : filemd5(format("%s/pipeline/%s", abspath(path.module), file))
     ])
+    tf_check = join("", [
+      for file in fileset("${abspath(path.module)}/tf-code", "*") : filemd5(format("%s/tf-code/%s", abspath(path.module), file))
+    ])
   }
 
   provisioner "local-exec" {
@@ -38,12 +41,111 @@ resource "null_resource" "repo-clean-import" {
 mkdir -p /tmp/testrepoimport
 cd /tmp/testrepoimport
 git clone ${azuredevops_git_repository.repo-clean.ssh_url} .
-cp ${abspath(path.module)}/pipeline/* .
+mkdir pipeline
+cp ${abspath(path.module)}/pipeline/* ./pipeline
+mkdir tf-code
+cp ${abspath(path.module)}/tf-code/* ./tf-code
 git add .
 git commit -m "Terraform updating pipeline file $(date)."
 git push origin master
 rm -rf /tmp/testrepoimport
 EOF
+  }
+}
+
+resource "azuredevops_build_definition" "build" {
+  project_id = azuredevops_project.project.id
+  name       = "Terraform Pipeline Example"
+  # path       = "\\ExampleFolder"
+
+  repository {
+    repo_type   = "TfsGit"
+    repo_id     = azuredevops_git_repository.repo-clean.id
+    branch_name = azuredevops_git_repository.repo-clean.default_branch
+    yml_path    = "pipeline/azure-pipelines.yml"
+  }
+
+  # variable_groups = [
+  #   azuredevops_variable_group.tfe.id
+  # ]
+
+  variable {
+    name  = "tfeHostName"
+    value = var.tfeHostName
+  }
+  variable {
+    name  = "tfeOrganizationName"
+    value = var.tfeOrganizationName
+  }
+  variable {
+    name  = "tfeWorkspaceName"
+    value = var.tfeWorkspaceName
+  }
+  variable {
+    name      = "tfeToken"
+    value     = var.tfeToken
+    is_secret = true
+  }
+}
+
+
+resource "azuredevops_build_definition" "plan-apply" {
+  project_id = azuredevops_project.project.id
+  name       = "Terraform Pipeline - Apply"
+
+  repository {
+    repo_type   = "TfsGit"
+    repo_id     = azuredevops_git_repository.repo-clean.id
+    branch_name = azuredevops_git_repository.repo-clean.default_branch
+    yml_path    = "pipeline/tfe-plan-apply.yml"
+  }
+
+  variable {
+    name  = "tfeHostName"
+    value = var.tfeHostName
+  }
+  variable {
+    name  = "tfeOrganizationName"
+    value = var.tfeOrganizationName
+  }
+  variable {
+    name  = "tfeWorkspaceName"
+    value = var.tfeWorkspaceName
+  }
+  variable {
+    name      = "tfeToken"
+    value     = var.tfeToken
+    is_secret = true
+  }
+}
+
+resource "azuredevops_build_definition" "plan-speculative" {
+  project_id = azuredevops_project.project.id
+  name       = "Terraform Pipeline - Speculative"
+
+  repository {
+    repo_type   = "TfsGit"
+    repo_id     = azuredevops_git_repository.repo-clean.id
+    branch_name = azuredevops_git_repository.repo-clean.default_branch
+    yml_path    = "pipeline/tfe-plan-speculative.yml"
+  }
+
+  variable {
+    name  = "tfeHostName"
+    value = var.tfeHostName
+  }
+  variable {
+    name  = "tfeOrganizationName"
+    value = var.tfeOrganizationName
+  }
+  variable {
+    name  = "tfeWorkspaceName"
+    value = var.tfeWorkspaceName
+  }
+  variable {
+    name      = "tfeToken"
+    value     = var.tfeToken
+    is_secret = true
   }
 }
 
@@ -70,49 +172,3 @@ EOF
 #     value = var.tfeToken
 #   }
 # }
-
-resource "azuredevops_build_definition" "build" {
-  project_id = azuredevops_project.project.id
-  name       = "Sample Build Definition"
-  path       = "\\ExampleFolder"
-
-  repository {
-    repo_type   = "TfsGit"
-    repo_id     = azuredevops_git_repository.repo-clean.id
-    branch_name = azuredevops_git_repository.repo-clean.default_branch
-    yml_path    = "azure-pipelines.yml"
-  }
-
-  # variable_groups = [
-  #   azuredevops_variable_group.tfe.id
-  # ]
-
-  variable {
-    name  = "tfeHostName"
-    value = var.tfeHostName
-  }
-  variable {
-    name  = "tfeOrganizationName"
-    value = var.tfeOrganizationName
-  }
-  variable {
-    name  = "tfeWorkspaceName"
-    value = var.tfeWorkspaceName
-  }
-  variable {
-    name  = "tfeToken"
-    value = var.tfeToken
-    # is_secret = true
-  }
-
-  variable {
-    name  = "PipelineVariable"
-    value = "Go Microsoft!"
-  }
-
-  variable {
-    name      = "PipelineSecret"
-    value     = "ZGV2cw"
-    is_secret = true
-  }
-}
