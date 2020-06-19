@@ -1,0 +1,67 @@
+parameters:
+  - name: isSpeculativePlan
+    displayName: If this is a speculative plan or not.
+    type: boolean
+    default: True
+
+variables:
+  - group: 'TFE Variable Group'
+    
+stages:
+  - stage: "TFE_Destroy"
+    displayName: "Terraform Enterprise Destroy"
+    jobs:
+      - job: "TFE_Destroy_Job"
+        displayName: "Terraform Enterprise Destroy"
+        pool:
+          vmImage: "ubuntu-latest"
+
+        steps:
+          # Checkout the pipeline repo, contains all the scripts need to run this file
+          - checkout: terraform-pipeline
+          # Checkout the repository that this template is being called from
+          - checkout: self
+          - task: UsePythonVersion@0
+            displayName: "Select Python3"
+            inputs:
+              versionSpec: "3.7"
+          - script: python -m pip install --upgrade pip requests
+            displayName: "Install Python3 tools"
+          # - task: PythonScript@0
+          #   displayName: "Archive Terraform Code"
+          #   inputs:
+          #     scriptSource: "filePath"
+          #     scriptPath: "terraform-pipeline/pipeline/archiveTerraform.py"
+          #     arguments: "-terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }}"
+          - task: PythonScript@0
+            displayName: "Get Workspace Id from TFE"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/getWorkspaceId.py"
+              arguments: "-tfeToken $(tfeToken)"
+          # - task: PythonScript@0
+          #   displayName: "Create Configuration Version"
+          #   inputs:
+          #     scriptSource: "filePath"
+          #     scriptPath: "terraform-pipeline/pipeline/createConfigurationVersion.py"
+          #     arguments: "-tfeToken $(tfeToken) -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
+          - task: PythonScript@0
+            displayName: "Create Destroy"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/createDestroy.py"
+              arguments: "-tfeToken $(tfeToken)"
+          - task: PythonScript@0
+            displayName: "Monitor Run"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/monitorRun.py"
+              arguments: "-tfeToken $(tfeToken)"
+          - task: PythonScript@0
+            condition: eq('${{ parameters.isSpeculativePlan }}', false)
+            displayName: "Apply Run"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/applyRun.py"
+              arguments: "-tfeToken $(tfeToken)"
+          

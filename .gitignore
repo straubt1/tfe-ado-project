@@ -31,3 +31,5 @@ override.tf.json
 *.tfvars
 *.tar.gz
 .DS_Store
+secrets*
+loadAndRunWorkspace.sh

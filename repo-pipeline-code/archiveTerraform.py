@@ -11,8 +11,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-tfeArchiveFileName',
                     default='terraform.tar.gz',
                     help='The file name to create as the archive file.')
-parser.add_argument('-tarPath',
-                    default='./tf-code',
+parser.add_argument('-terraformWorkingDirectory',
+                    default='',
                     help='The path of the Terraform code.')
 
 # Throw exception if any arguments were not set
@@ -26,16 +26,17 @@ except Exception:
 
 # Assign local variables
 tfeArchiveFileName = args.tfeArchiveFileName
-tarPath = args.tarPath
+terraformWorkingDirectory = args.terraformWorkingDirectory
 
 print(f'tfeArchiveFileName:{tfeArchiveFileName}')
-print(f'tarPath:{tarPath}')
+print(f'terraformWorkingDirectory:{terraformWorkingDirectory}')
 
 currentDirectory = os.getcwd()
 archiveFullPath = os.path.join(currentDirectory, tfeArchiveFileName)
 
+print(f'{currentDirectory}')
 # cd if needed
-os.chdir(tarPath)
+os.chdir(terraformWorkingDirectory)
 
 tar = tarfile.open(archiveFullPath, "w:gz")
 for root, dirs, files in os.walk('./', topdown=True):

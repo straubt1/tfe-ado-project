@@ -1,0 +1,16 @@
+trigger:
+  - master
+
+resources:
+  repositories:
+    - repository: terraform-pipeline
+      type: Git
+      name: eminently-suitable-kingfish/terraform-pipeline
+      ref: master
+
+extends:
+  template: pipeline/tfe-run-template.yml@terraform-pipeline
+  parameters:
+    isSpeculativePlan: True
+    # tfeWorkspaceName: "ado-demo"
+    # terraformWorkingDirectory: ''

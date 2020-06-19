@@ -5,6 +5,7 @@ import os
 import requests
 import json
 import argparse
+import tarfile
 
 # Parse arguments, these can be set via parameters or environment variables
 parser = argparse.ArgumentParser(
@@ -21,12 +22,6 @@ parser.add_argument('-tfeOrganizationName',
 parser.add_argument('-tfeWorkspaceId',
                     default=os.environ.get('TFEWORKSPACEID'),
                     help="TFE Workspace Id (i.e. ws-zzzzzzzzzz")
-parser.add_argument('-tfeArchiveFileName',
-                    default=os.environ.get('TFEARCHIVEFILENAME'),
-                    help="The name of the archive file containing the terraform code.")
-parser.add_argument('-tfeSpeculativePlan',
-                    default=False,
-                    help="When True, trigger a speculative plan that can not be applied.")
 
 # Throw exception if any arguments were not set
 try:
@@ -42,51 +37,73 @@ tfeToken = args.tfeToken
 tfeHostname = args.tfeHostname
 tfeOrganizationName = args.tfeOrganizationName
 tfeWorkspaceId = args.tfeWorkspaceId
-tfeArchiveFileName = args.tfeArchiveFileName
-tfeSpeculativePlan = bool(args.tfeSpeculativePlan)
+
+adoBuildLink = f'{os.environ["SYSTEM_TEAMFOUNDATIONSERVERURI"]}/{os.environ["SYSTEM_TEAMPROJECT"]}/_build/results?buildId={os.environ["BUILD_BUILDID"]}'
 
 print(f'tfeToken:{tfeToken}')
 print(f'tfeHostname:{tfeHostname}')
 print(f'tfeOrganizationName:{tfeOrganizationName}')
 print(f'tfeWorkspaceId:{tfeWorkspaceId}')
-print(f'tfeArchiveFileName:{tfeArchiveFileName}')
-print(f'tfeSpeculativePlan:{tfeSpeculativePlan}')
 
 tfConfig = {
-    "data":
-    {
-        "type": "configuration-versions",
+    "data": {
+        "type": "runs",
         "attributes": {
-            "auto-queue-runs": False,
-            "speculative": tfeSpeculativePlan
+                "is-destroy": True,
+                "message": "ADO Triggered Destroy"
+        },
+        "relationships": {
+            "workspace": {
+                "data": {
+                    "type": "workspaces",
+                    "id": tfeWorkspaceId
+                }
+            }
         }
     }
 }
 
-resp = requests.post(f'https://{tfeHostname}/api/v2/workspaces/{tfeWorkspaceId}/configuration-versions',
+resp = requests.post(f'https://{tfeHostname}/api/v2/runs',
                      headers={'Authorization': f'Bearer {tfeToken}',
                               'Content-Type': 'application/vnd.api+json'},
                      data=json.dumps(tfConfig)
                      )
-f = open("postConfigurationVersion.json", "w")
+
+f = open("postCreateDestroy.json", "w")
 f.write(resp.text)
 f.close()
 print(
-    f'##vso[artifact.upload containerfolder=apicalls;artifactname=postConfigurationVersion.json;]{os.getcwd()}/postConfigurationVersion.json')
+    f'##vso[artifact.upload containerfolder=apicalls;artifactname=postCreateDestroy.json;]{os.getcwd()}/postCreateDestroy.json')
 
-tfeConfigurationVersionId = resp.json()['data']['id']
-tfeConfigurationVersionUploadUrl = resp.json(
-)['data']['attributes']['upload-url']
-print(
-    f'##vso[task.setvariable variable=tfeConfigurationVersionId;]{tfeConfigurationVersionId}')
-print(
-    f'##vso[task.setvariable variable=tfeConfigurationVersionUploadUrl;]{tfeConfigurationVersionUploadUrl}')
+tfeRunId = resp.json()['data']['id']
+tfePlanId = resp.json()['data']['relationships']['plan']['data']['id']
 
-print(f'tfeConfigurationVersionId:{tfeConfigurationVersionId}')
-print(f'tfeConfigurationVersionUploadUrl:{tfeConfigurationVersionUploadUrl}')
+print(f'##vso[task.setvariable variable=tfeRunId;]{tfeRunId}')
+print(f'##vso[task.setvariable variable=tfePlanId;]{tfePlanId}')
 
-resp = requests.put(tfeConfigurationVersionUploadUrl,
-                    headers={'Authorization': f'Bearer {tfeToken}',
-                             'Content-Type': 'application/octet-stream'},
-                    data=open(tfeArchiveFileName, 'rb').read()
-                    )
+print(f'tfeRunId:{tfeRunId}')
+print(f'tfePlanId:{tfePlanId}')
+
+tfConfig = {
+    "data": {
+        "attributes": {
+            "body": f'ADO Build Link:<br />  {adoBuildLink}'
+        },
+        "relationships": {
+            "run": {
+                "data": {
+                    "type": "runs",
+                    "id": tfeRunId
+                }
+            }
+        },
+        "type": "comments"
+    }
+}
+
+# Post comment
+resp = requests.post(f'https://{tfeHostname}/api/v2/runs/{tfeRunId}/comments',
+                     headers={'Authorization': f'Bearer {tfeToken}',
+                              'Content-Type': 'application/vnd.api+json'},
+                     data=json.dumps(tfConfig)
+                     )
