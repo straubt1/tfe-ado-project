@@ -1,0 +1,81 @@
+parameters:
+  - name: isSpeculativePlan
+    displayName: If this is a speculative plan or not.
+    type: boolean
+    default: True
+  - name: terraformWorkingDirectory
+    displayName: The working directory of the repository of the root module. Empty is root, do not prefix with './'
+    type: string
+    default: ''
+
+stages:
+  - stage: "TFE_Run"
+    displayName: "Terraform Enterprise Run"
+    jobs:
+      - job: "TFE_Run_Job"
+        displayName: "Terraform Enterprise Run"
+        pool:
+          vmImage: "ubuntu-latest"
+
+        steps:
+          # Checkout the pipeline repo, contains all the scripts need to run this file
+          - checkout: terraform-pipeline
+          # Checkout the repository that this template is being called from
+          - checkout: self
+          # - task: Bash@3
+          #   displayName: "logs"
+          #   inputs:
+          #     targetType: "inline"
+          #     script: |
+          #       pwd
+          #       ls -ll ./terraform-demo
+          #       ls -ll ./terraform-pipeline
+          - task: UsePythonVersion@0
+            displayName: "Select Python3"
+            inputs:
+              versionSpec: "3.7"
+          - script: python -m pip install --upgrade pip requests
+            displayName: "Install Python3 tools"
+          - task: PythonScript@0
+            displayName: "Archive Terraform Code"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/archiveTerraform.py"
+              arguments: "-terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }}"
+          - task: PythonScript@0
+            displayName: "Get Workspace Id from TFE"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/getWorkspaceId.py"
+              arguments: "-tfeToken $(tfeToken)"
+          - task: PythonScript@0
+            displayName: "Create Configuration Version"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/createConfigurationVersion.py"
+              arguments: "-tfeToken $(tfeToken) -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
+          - task: PythonScript@0
+            displayName: "Create Run"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/createRun.py"
+              arguments: "-tfeToken $(tfeToken)"
+          - task: PythonScript@0
+            displayName: "Monitor Run"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/monitorRun.py"
+              arguments: "-tfeToken $(tfeToken)"
+          - task: PythonScript@0
+            condition: eq('${{ parameters.isSpeculativePlan }}', false)
+            displayName: "Apply Run"
+            inputs:
+              scriptSource: "filePath"
+              scriptPath: "terraform-pipeline/pipeline/applyRun.py"
+              arguments: "-tfeToken $(tfeToken)"
+          # - task: Bash@3
+          #   condition: eq('${{ parameters.isSpeculativePlan }}', false)
+          #   displayName: "Apply Run"
+          #   inputs:
+          #     targetType: "inline"
+          #     script: echo 'Terraform Apply'

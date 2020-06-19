@@ -43,7 +43,8 @@ tfeHostname = args.tfeHostname
 tfeOrganizationName = args.tfeOrganizationName
 tfeWorkspaceId = args.tfeWorkspaceId
 tfeArchiveFileName = args.tfeArchiveFileName
-tfeSpeculativePlan = bool(args.tfeSpeculativePlan)
+# Convert string to boolean using json
+tfeSpeculativePlan = json.loads(args.tfeSpeculativePlan.lower())
 
 print(f'tfeToken:{tfeToken}')
 print(f'tfeHostname:{tfeHostname}')
@@ -90,3 +91,5 @@ resp = requests.put(tfeConfigurationVersionUploadUrl,
                              'Content-Type': 'application/octet-stream'},
                     data=open(tfeArchiveFileName, 'rb').read()
                     )
+
+# a
