@@ -1,28 +1,18 @@
 parameters:
-  # - name: tfeWorkspaceName
-  #   displayName: TFE Workspace Name.
-  #   type: string
-  #   default: ''
   - name: isSpeculativePlan
     displayName: If this is a speculative plan or not.
     type: boolean
     default: True
-  - name: terraformWorkingDirectory
-    displayName: The working directory of the repository of the root module. Empty is root, do not prefix with './'
-    type: string
-    default: ''
 
 variables:
   - group: 'TFE Variable Group'
-#   - name: tfeWorkspaceName
-#     value: ${{ parameters.tfeWorkspaceName }}
     
 stages:
-  - stage: "TFE_Run"
-    displayName: "Terraform Enterprise Run"
+  - stage: "TFE_Destroy"
+    displayName: "Terraform Enterprise Destroy"
     jobs:
-      - job: "TFE_Run_Job"
-        displayName: "Terraform Enterprise Run"
+      - job: "TFE_Destroy_Job"
+        displayName: "Terraform Enterprise Destroy"
         pool:
           vmImage: "ubuntu-latest"
 
@@ -37,29 +27,29 @@ stages:
               versionSpec: "3.7"
           - script: python -m pip install --upgrade pip requests
             displayName: "Install Python3 tools"
-          - task: PythonScript@0
-            displayName: "Archive Terraform Code"
-            inputs:
-              scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/archiveTerraform.py"
-              arguments: "-terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }}"
+          # - task: PythonScript@0
+          #   displayName: "Archive Terraform Code"
+          #   inputs:
+          #     scriptSource: "filePath"
+          #     scriptPath: "terraform-pipeline/pipeline/archiveTerraform.py"
+          #     arguments: "-terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }}"
           - task: PythonScript@0
             displayName: "Get Workspace Id from TFE"
             inputs:
               scriptSource: "filePath"
               scriptPath: "terraform-pipeline/pipeline/getWorkspaceId.py"
               arguments: "-tfeToken $(tfeToken)"
+          # - task: PythonScript@0
+          #   displayName: "Create Configuration Version"
+          #   inputs:
+          #     scriptSource: "filePath"
+          #     scriptPath: "terraform-pipeline/pipeline/createConfigurationVersion.py"
+          #     arguments: "-tfeToken $(tfeToken) -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
           - task: PythonScript@0
-            displayName: "Create Configuration Version"
+            displayName: "Create Destroy"
             inputs:
               scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/createConfigurationVersion.py"
-              arguments: "-tfeToken $(tfeToken) -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
-          - task: PythonScript@0
-            displayName: "Create Run"
-            inputs:
-              scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/createRun.py"
+              scriptPath: "terraform-pipeline/pipeline/createDestroy.py"
               arguments: "-tfeToken $(tfeToken)"
           - task: PythonScript@0
             displayName: "Monitor Run"
@@ -74,3 +64,4 @@ stages:
               scriptSource: "filePath"
               scriptPath: "terraform-pipeline/pipeline/applyRun.py"
               arguments: "-tfeToken $(tfeToken)"
+          

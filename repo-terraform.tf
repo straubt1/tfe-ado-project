@@ -6,16 +6,22 @@ resource "azuredevops_git_repository" "terraform" {
   }
 }
 
+resource "tfe_workspace" "terraform" {
+  organization      = var.tfeOrganizationName
+  name              = var.tfeWorkspaceName
+  terraform_version = "0.12.26"
+}
+
 # Workaround since import doesnt work currently on new git repo's
-# Seed new repo with pipeline files
+# Sync this repo's subfolder to the ADO git repo
 resource "null_resource" "terraform-repo-import" {
-  # Complexity to checksum all the files in the pipeline directory and join them into a string
+  # Complexity to checksum all the files in the directory and join them into a string
   # Any change to the directory will cause this to fire
   triggers = {
     check = join("", [
       for file in fileset("${abspath(path.module)}/repo-terraform-code", "*") : filemd5(format("%s/repo-terraform-code/%s", abspath(path.module), file))
     ])
-    force = timestamp()
+    # force = timestamp()
   }
 
   provisioner "local-exec" {
@@ -27,7 +33,7 @@ cp -rf ${abspath(path.module)}/repo-terraform-code/* ./
 git add .
 git commit -m "Syncing repo files $(date)."
 git push origin master
-# rm -rf /tmp/${azuredevops_git_repository.terraform.name}
+rm -rf /tmp/${azuredevops_git_repository.terraform.name}
 EOF
   }
 }
@@ -44,22 +50,13 @@ resource "azuredevops_build_definition" "plan-apply" {
     yml_path    = "ci/tfe-run-apply.yml"
   }
 
-  variable {
-    name  = "tfeHostName"
-    value = var.tfeHostName
-  }
-  variable {
-    name  = "tfeOrganizationName"
-    value = var.tfeOrganizationName
-  }
+  variable_groups = [
+    azuredevops_variable_group.tfe.id
+  ]
+
   variable {
     name  = "tfeWorkspaceName"
-    value = var.tfeWorkspaceName
-  }
-  variable {
-    name      = "tfeToken"
-    value     = var.tfeToken
-    is_secret = true
+    value = tfe_workspace.terraform.name
   }
 }
 
@@ -74,21 +71,33 @@ resource "azuredevops_build_definition" "plan-speculative" {
     yml_path    = "ci/tfe-run-speculative.yml"
   }
 
-  variable {
-    name  = "tfeHostName"
-    value = var.tfeHostName
-  }
-  variable {
-    name  = "tfeOrganizationName"
-    value = var.tfeOrganizationName
-  }
+  variable_groups = [
+    azuredevops_variable_group.tfe.id
+  ]
+
   variable {
     name  = "tfeWorkspaceName"
-    value = var.tfeWorkspaceName
+    value = tfe_workspace.terraform.name
   }
+}
+
+resource "azuredevops_build_definition" "destroy" {
+  project_id = azuredevops_project.project.id
+  name       = "Terraform Pipeline - Destroy"
+
+  repository {
+    repo_type   = "TfsGit"
+    repo_id     = azuredevops_git_repository.terraform.id
+    branch_name = azuredevops_git_repository.terraform.default_branch
+    yml_path    = "ci/tfe-destroy.yml"
+  }
+
+  variable_groups = [
+    azuredevops_variable_group.tfe.id
+  ]
+
   variable {
-    name      = "tfeToken"
-    value     = var.tfeToken
-    is_secret = true
+    name  = "tfeWorkspaceName"
+    value = tfe_workspace.terraform.name
   }
 }

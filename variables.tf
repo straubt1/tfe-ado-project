@@ -1,4 +1,7 @@
 variable "tfeHostName" {}
 variable "tfeOrganizationName" {}
-variable "tfeWorkspaceName" {}
 variable "tfeToken" {}
+
+variable "tfeWorkspaceName" {
+  default = "ado-terraform-dev"
+}

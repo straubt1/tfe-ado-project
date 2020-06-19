@@ -18,15 +18,6 @@ parser.add_argument('-tfeHostname',
 parser.add_argument('-tfeRunId',
                     default=os.environ.get('TFERUNID'),
                     help="TFE Run Id")
-# parser.add_argument('-tfeOrganizationName',
-#                     default=os.environ.get('TFEORGANIZATIONNAME'),
-#                     help="TFE Organization Name (i.e. hashicorp-dev")
-# parser.add_argument('-tfeWorkspaceId',
-#                     default=os.environ.get('TFEWORKSPACEID'),
-#                     help="TFE Workspace Id (i.e. ws-zzzzzzzzzz")
-# parser.add_argument('-tfeConfigurationVersionId',
-#                     default=os.environ.get('TFECONFIGURATIONVERSIONID'),
-#                     help="TFE Configuration Version Id.")
 
 # Throw exception if any arguments were not set
 try:

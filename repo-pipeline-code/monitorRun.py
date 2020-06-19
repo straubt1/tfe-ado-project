@@ -110,6 +110,12 @@ def checkStatus(status):
         # Regardless of how we get here, we are done
         return True
 
+    if status in ['apply_queued', 'applying', 'confirmed']:
+        return False
+    if status in ['applied', 'planned_and_finished', 'discarded', 'errored', 'canceled', 'force_canceled']:
+        # Final states, we are done
+        return True
+
 
 def printLogs(message, logs):
     print()
@@ -167,7 +173,7 @@ delta-monthly-cost:         ${resp.json()['data']['attributes']['delta-monthly-c
 """
 
     # Print policy checks to output
-    printLogs('Policy Check Logs', tfeCostEstimate)
+    printLogs('Cost Estimate Logs', tfeCostEstimate)
 
 
 # Get Policy Check output
