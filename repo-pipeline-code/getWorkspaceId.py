@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-tfeToken',
                     default=os.environ.get('TFETOKEN'),
                     help='API Token used to authenticate to TFE.')
-parser.add_argument('-tfeHostname',
+parser.add_argument('-tfeHostName',
                     default=os.environ.get('TFEHOSTNAME'),
                     help="TFE Hostname (i.e. terraform.company.com")
 parser.add_argument('-tfeOrganizationName',
@@ -32,16 +32,16 @@ except Exception:
 
 # Assign local variables
 tfeToken = args.tfeToken
-tfeHostname = args.tfeHostname
+tfeHostName = args.tfeHostName
 tfeOrganizationName = args.tfeOrganizationName
 tfeWorkspaceName = args.tfeWorkspaceName
 
 print(f'tfeToken:{tfeToken}')
-print(f'tfeHostname:{tfeHostname}')
+print(f'tfeHostName:{tfeHostName}')
 print(f'tfeOrganizationName:{tfeOrganizationName}')
 print(f'tfeWorkspaceName:{tfeWorkspaceName}')
 
-resp = requests.get(f'https://{tfeHostname}/api/v2/organizations/{tfeOrganizationName}/workspaces/{tfeWorkspaceName}',
+resp = requests.get(f'https://{tfeHostName}/api/v2/organizations/{tfeOrganizationName}/workspaces/{tfeWorkspaceName}',
                     headers={'Authorization': f'Bearer {tfeToken}',
                              'Content-Type': 'application/vnd.api+json'},
                     )

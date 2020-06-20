@@ -1,8 +1,10 @@
+# Expected Variables to be set
+# - tfeHostName
+# - tfeOrganizationName
+# - tfeWorkspaceName
+# - tfeToken
+
 parameters:
-  # - name: tfeWorkspaceName
-  #   displayName: TFE Workspace Name.
-  #   type: string
-  #   default: ''
   - name: isSpeculativePlan
     displayName: If this is a speculative plan or not.
     type: boolean
@@ -11,21 +13,13 @@ parameters:
     displayName: The working directory of the repository of the root module. Empty is root, do not prefix with './'
     type: string
     default: ''
-
-variables:
-  - group: 'TFE Variable Group'
-#   - name: tfeWorkspaceName
-#     value: ${{ parameters.tfeWorkspaceName }}
     
 stages:
   - stage: "TFE_Run"
     displayName: "Terraform Enterprise Run"
     jobs:
       - job: "TFE_Run_Job"
-        displayName: "Terraform Enterprise Run"
-        pool:
-          vmImage: "ubuntu-latest"
-
+        displayName: "Terraform Enterprise Run Job"
         steps:
           # Checkout the pipeline repo, contains all the scripts need to run this file
           - checkout: terraform-pipeline

@@ -1,5 +1,5 @@
-trigger:
-  - master
+trigger: none
+pr: none
 
 resources:
   repositories:
@@ -7,6 +7,12 @@ resources:
       type: Git
       name: eminently-suitable-kingfish/terraform-pipeline
       ref: master
+
+variables:
+  - group: 'TFE Variable Group'
+
+pool:
+  vmImage: "ubuntu-latest"
 
 extends:
   template: pipeline/tfe-destroy-template.yml@terraform-pipeline

@@ -21,7 +21,7 @@ resource "null_resource" "terraform-repo-import" {
     check = join("", [
       for file in fileset("${abspath(path.module)}/repo-terraform-code", "*") : filemd5(format("%s/repo-terraform-code/%s", abspath(path.module), file))
     ])
-    # force = timestamp()
+    force = timestamp()
   }
 
   provisioner "local-exec" {
@@ -50,6 +50,10 @@ resource "azuredevops_build_definition" "plan-apply" {
     yml_path    = "ci/tfe-run-apply.yml"
   }
 
+  ci_trigger {
+    use_yaml = true
+  }
+
   variable_groups = [
     azuredevops_variable_group.tfe.id
   ]
@@ -71,6 +75,10 @@ resource "azuredevops_build_definition" "plan-speculative" {
     yml_path    = "ci/tfe-run-speculative.yml"
   }
 
+  ci_trigger {
+    use_yaml = true
+  }
+
   variable_groups = [
     azuredevops_variable_group.tfe.id
   ]
@@ -79,6 +87,12 @@ resource "azuredevops_build_definition" "plan-speculative" {
     name  = "tfeWorkspaceName"
     value = tfe_workspace.terraform.name
   }
+
+  # variable {
+  #   name  = "tfeToken"
+  #   value = var.tfeToken
+  #   # is_secret = true
+  # }
 }
 
 resource "azuredevops_build_definition" "destroy" {
@@ -92,6 +106,10 @@ resource "azuredevops_build_definition" "destroy" {
     yml_path    = "ci/tfe-destroy.yml"
   }
 
+  ci_trigger {
+    use_yaml = true
+  }
+
   variable_groups = [
     azuredevops_variable_group.tfe.id
   ]
@@ -101,3 +119,34 @@ resource "azuredevops_build_definition" "destroy" {
     value = tfe_workspace.terraform.name
   }
 }
+
+# ADO git repo's do not support `pr` triggers via .yml
+# So we must use the branch policy to trigger a speculative plan
+# On a PR into the default branch
+resource "azuredevops_branch_policy_build_validation" "terraform-pr" {
+  project_id = azuredevops_project.project.id
+
+  # Setting this to true will block all master pushes
+  # But we need to be able to push code from this terraform run
+  enabled  = false
+  blocking = false
+
+  settings {
+    display_name        = "TFE Speculative Plan (pre-merge check)."
+    build_definition_id = azuredevops_build_definition.plan-speculative.id
+    valid_duration      = 720
+
+    scope {
+      repository_id  = azuredevops_git_repository.terraform.id
+      repository_ref = azuredevops_git_repository.terraform.default_branch
+      match_type     = "Exact"
+    }
+  }
+}
+
+# Not implemented yet
+# resource "azuredevops_resource_authorization" "plan-speculative" {
+#   project_id  = azuredevops_project.project.id
+#   resource_id = azuredevops_build_definition.plan-speculative.id
+#   authorized  = true
+# }

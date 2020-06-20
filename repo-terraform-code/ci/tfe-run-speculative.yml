@@ -1,5 +1,12 @@
-trigger:
-  - master
+# trigger:
+#   branches:
+#     include: 
+#       - feature/*
+trigger: none
+pr:
+ branches:
+  include:
+    - master
 
 resources:
   repositories:
@@ -8,9 +15,16 @@ resources:
       name: eminently-suitable-kingfish/terraform-pipeline
       ref: master
 
+variables:
+  - group: 'TFE Variable Group'
+
+pool:
+  vmImage: "ubuntu-latest"
+
 extends:
   template: pipeline/tfe-run-template.yml@terraform-pipeline
   parameters:
     isSpeculativePlan: True
+    # tfeTokenParam: $(tfeToken)
     # tfeWorkspaceName: "ado-demo"
     # terraformWorkingDirectory: ''
