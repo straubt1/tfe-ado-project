@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-tfeToken',
                     default=os.environ.get('TFETOKEN'),
                     help='API Token used to authenticate to TFE.')
-parser.add_argument('-tfeHostname',
+parser.add_argument('-tfeHostName',
                     default=os.environ.get('TFEHOSTNAME'),
                     help="TFE Hostname (i.e. terraform.company.com")
 parser.add_argument('-tfeRunId',
@@ -30,13 +30,13 @@ except Exception:
 
 # Assign local variables
 tfeToken = args.tfeToken
-tfeHostname = args.tfeHostname
+tfeHostName = args.tfeHostName
 tfeRunId = args.tfeRunId
 
 adoBuildLink = f'{os.environ["SYSTEM_TEAMFOUNDATIONSERVERURI"]}/{os.environ["SYSTEM_TEAMPROJECT"]}/_build/results?buildId={os.environ["BUILD_BUILDID"]}'
 
 print(f'tfeToken:{tfeToken}')
-print(f'tfeHostname:{tfeHostname}')
+print(f'tfeHostName:{tfeHostName}')
 print(f'tfeRunId:{tfeRunId}')
 
 tfConfig = {
@@ -44,9 +44,9 @@ tfConfig = {
 }
 
 # TODO: If there is a policy override required, must make a call to override.
-# POST f'https://{tfeHostname}/api/v2/policy-checks/{policy_check_id}/actions/override'
+# POST f'https://{tfeHostName}/api/v2/policy-checks/{policy_check_id}/actions/override'
 
-resp = requests.post(f'https://{tfeHostname}/api/v2/runs/{tfeRunId}/actions/apply',
+resp = requests.post(f'https://{tfeHostName}/api/v2/runs/{tfeRunId}/actions/apply',
                      headers={'Authorization': f'Bearer {tfeToken}',
                               'Content-Type': 'application/vnd.api+json'},
                      data=json.dumps(tfConfig)

@@ -30,8 +30,9 @@ resource "azuredevops_variable_group" "tfe" {
     value = var.tfeOrganizationName
   }
   variable {
-    name      = "tfeToken"
-    value     = var.tfeToken
-    is_secret = true
+    name  = "tfeToken"
+    value = var.tfeToken
+    # Changing this to a secret breaks...
+    # is_secret = true
   }
 }

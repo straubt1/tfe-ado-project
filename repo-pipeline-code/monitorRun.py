@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-tfeToken',
                     default=os.environ.get('TFETOKEN'),
                     help='API Token used to authenticate to TFE.')
-parser.add_argument('-tfeHostname',
+parser.add_argument('-tfeHostName',
                     default=os.environ.get('TFEHOSTNAME'),
                     help="TFE Hostname (i.e. terraform.company.com")
 parser.add_argument('-tfeOrganizationName',
@@ -47,7 +47,7 @@ except Exception:
 
 # Assign local variables
 tfeToken = args.tfeToken
-tfeHostname = args.tfeHostname
+tfeHostName = args.tfeHostName
 tfeOrganizationName = args.tfeOrganizationName
 tfeWorkspaceName = args.tfeWorkspaceName
 tfeWorkspaceId = args.tfeWorkspaceId
@@ -55,13 +55,13 @@ tfeRunId = args.tfeRunId
 tfePlanId = args.tfePlanId
 
 print(f'tfeToken:{tfeToken}')
-print(f'tfeHostname:{tfeHostname}')
+print(f'tfeHostName:{tfeHostName}')
 print(f'tfeOrganizationName:{tfeOrganizationName}')
 print(f'tfeRunId:{tfeRunId}')
 print(f'tfePlanId:{tfePlanId}')
 
 # Get initial information about the Run and its starting status
-resp = requests.get(f'https://{tfeHostname}/api/v2/runs/{tfeRunId}',
+resp = requests.get(f'https://{tfeHostName}/api/v2/runs/{tfeRunId}',
                     headers={'Authorization': f'Bearer {tfeToken}',
                              'Content-Type': 'application/vnd.api+json'},
                     )
@@ -127,7 +127,7 @@ def printLogs(message, logs):
 # Loop until plan, cost estimate, and policy checks are all done (if applicable)
 planDone = False
 while planDone is False:
-    resp = requests.get(f'https://{tfeHostname}/api/v2/runs/{tfeRunId}',
+    resp = requests.get(f'https://{tfeHostName}/api/v2/runs/{tfeRunId}',
                         headers={'Authorization': f'Bearer {tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
@@ -138,7 +138,7 @@ while planDone is False:
 print('Plan is done')
 
 # Get Plan output
-resp = requests.get(f'https://{tfeHostname}/api/v2/plans/{tfePlanId}',
+resp = requests.get(f'https://{tfeHostName}/api/v2/plans/{tfePlanId}',
                     headers={'Authorization': f'Bearer {tfeToken}',
                              'Content-Type': 'application/vnd.api+json'},
                     )
@@ -159,7 +159,7 @@ printLogs('Plan Logs', tfePlan)
 # # Get Cost Estimate output
 if tfeIsCostEstimate:
     # Get Cost Estimate logs url
-    resp = requests.get(f'https://{tfeHostname}/api/v2/cost-estimates/{tfeCostEstimateId}',
+    resp = requests.get(f'https://{tfeHostName}/api/v2/cost-estimates/{tfeCostEstimateId}',
                         headers={'Authorization': f'Bearer {tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
@@ -179,13 +179,13 @@ delta-monthly-cost:         ${resp.json()['data']['attributes']['delta-monthly-c
 # Get Policy Check output
 if tfeIsPolicyCheck:
     # Get Policy Check logs url
-    resp = requests.get(f'https://{tfeHostname}/api/v2/runs/{tfeRunId}/policy-checks',
+    resp = requests.get(f'https://{tfeHostName}/api/v2/runs/{tfeRunId}/policy-checks',
                         headers={'Authorization': f'Bearer {tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
     policyChecksLogsUrl = resp.json()['data'][0]['links']['output']
 
-    resp = requests.get(f'https://{tfeHostname}{policyChecksLogsUrl}',
+    resp = requests.get(f'https://{tfeHostName}{policyChecksLogsUrl}',
                         headers={'Authorization': f'Bearer {tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
@@ -198,7 +198,7 @@ if tfeIsPolicyCheck:
 f = open("runsummary.md", "w")
 f.write('## Details\n')
 f.write(
-    f'Terraform Enterprise Run: <https://{tfeHostname}/app/{tfeOrganizationName}/workspaces/{tfeWorkspaceName}/runs/{tfeRunId}>\n')
+    f'Terraform Enterprise Run: <https://{tfeHostName}/app/{tfeOrganizationName}/workspaces/{tfeWorkspaceName}/runs/{tfeRunId}>\n')
 
 if tfeIsCostEstimate:
     f.write('## Cost Estimate\n')
