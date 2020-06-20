@@ -19,10 +19,7 @@ stages:
     displayName: "Terraform Enterprise Run"
     jobs:
       - job: "TFE_Run_Job"
-        displayName: "Terraform Enterprise Run"
-        pool:
-          vmImage: "ubuntu-latest"
-
+        displayName: "Terraform Enterprise Run Job"
         steps:
           # Checkout the pipeline repo, contains all the scripts need to run this file
           - checkout: terraform-pipeline

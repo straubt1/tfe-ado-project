@@ -10,6 +10,12 @@ resources:
       name: eminently-suitable-kingfish/terraform-pipeline
       ref: master
 
+variables:
+  - group: 'TFE Variable Group'
+
+pool:
+  vmImage: "ubuntu-latest"
+
 extends:
   template: pipeline/tfe-run-template.yml@terraform-pipeline
   parameters:

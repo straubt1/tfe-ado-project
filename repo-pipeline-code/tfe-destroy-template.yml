@@ -3,9 +3,6 @@ parameters:
     displayName: If this is a speculative plan or not.
     type: boolean
     default: True
-
-variables:
-  - group: 'TFE Variable Group'
     
 stages:
   - stage: "TFE_Destroy"
@@ -59,7 +56,7 @@ stages:
               arguments: "-tfeToken $(tfeToken)"
           - task: PythonScript@0
             condition: eq('${{ parameters.isSpeculativePlan }}', false)
-            displayName: "Apply Run"
+            displayName: "Apply Destroy"
             inputs:
               scriptSource: "filePath"
               scriptPath: "terraform-pipeline/pipeline/applyRun.py"
