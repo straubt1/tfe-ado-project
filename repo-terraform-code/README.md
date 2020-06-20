@@ -14,3 +14,4 @@ There are two pipelines:
 
 - `tfe-run-speculative` will trigger a [Speculative Plan](https://www.terraform.io/docs/cloud/run/index.html#speculative-plans) that can not be applied.
 - `tfe-run-apply` will trigger a run that will be auto applied if there are no planning/policy check errors.
+ 

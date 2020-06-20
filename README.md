@@ -94,6 +94,15 @@ Try the `Terraform Pipeline - Run Apply` and `Terraform Pipeline - Destroy` Buil
 
 This repository leverages python as the underlying scripting language, in the hopes to add additional testing and readability.
 
+## Tips & Tricks
+
+- When creating a `azuredevops_build_definition` be sure to set the argument `ci_trigger { use_yaml = true}` to true, otherwise your yml triggers will not be honored.
+- User-defined variables can consist of letters, numbers, ., and _ characters. Don't use variable prefixes that are reserved by the system. These are: endpoint, input, secret, and securefile. Any variable that begins with one of these strings (regardless of capitalization) will not be available to your tasks and scripts. [source](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch)
+
+## Current Limitations
+
+- Pull request triggers not supported with Azure Repos, more info [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/troubleshooting?view=azure-devops#pull-request-triggers-not-supported-with-azure-repos)
+
 ## Resources
 
 - [ADO Logging](https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?view=azure-devops&tabs=bash)

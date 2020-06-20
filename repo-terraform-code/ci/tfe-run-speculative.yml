@@ -1,5 +1,12 @@
-trigger:
-  - master
+# trigger:
+#   branches:
+#     include: 
+#       - feature/*
+trigger: none
+pr:
+ branches:
+  include:
+    - master
 
 resources:
   repositories:

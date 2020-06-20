@@ -15,7 +15,7 @@ resource "null_resource" "pipeline-repo-import" {
     check = join("", [
       for file in fileset("${abspath(path.module)}/repo-pipeline-code", "*") : filemd5(format("%s/repo-pipeline-code/%s", abspath(path.module), file))
     ])
-    # force = timestamp()
+    force = timestamp()
   }
 
   provisioner "local-exec" {

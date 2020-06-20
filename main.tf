@@ -5,6 +5,14 @@ resource "random_pet" "project" {
 resource "azuredevops_project" "project" {
   project_name = random_pet.project.id
   description  = "Terraform build ADO Project"
+
+  # (Optional) Disable unused features
+  features = {
+    testplans = "disabled"
+    boards    = "disabled"
+    testplans = "disabled"
+    artifacts = "disabled"
+  }
 }
 
 resource "azuredevops_variable_group" "tfe" {

@@ -49,6 +49,8 @@ stages:
               scriptSource: "filePath"
               scriptPath: "terraform-pipeline/pipeline/getWorkspaceId.py"
               arguments: "-tfeToken $(tfeToken)"
+              # arguments: "-tfeToken $[variable.tfeToken]"
+              # arguments: "-tfeToken ${{ parameters.tfeTokenParam }}"
           - task: PythonScript@0
             displayName: "Create Configuration Version"
             inputs:
