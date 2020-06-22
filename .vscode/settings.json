@@ -1,0 +1,6 @@
+{
+  "python.formatting.autopep8Args": [
+    "--max-line-length=300"
+  ],
+  "git.ignoreLimitWarning": true
+}

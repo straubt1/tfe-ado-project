@@ -10,8 +10,7 @@ import time
 import requests
 
 # Required, these can be set via arguments or environment variables
-parser = argparse.ArgumentParser(
-    description='Perform a TFE Run Plan.')
+parser = argparse.ArgumentParser(description='Perform a TFE Run Plan.')
 parser.add_argument('-tfeToken',
                     default=os.environ.get('TFETOKEN'),
                     help='API Token used to authenticate to TFE.')
@@ -106,10 +105,8 @@ def archive_files(settings):
             tar.add(os.path.join(root, file))
     tar.close()
 
-    print(
-        f'##vso[artifact.upload containerfolder=archive;artifactname=uploadedresult;]{archiveFullPath}')
-    print(
-        f'##vso[task.setvariable variable=tfeArchiveFileName;]{settings.tfeArchiveFileName}')
+    print(f'##vso[artifact.upload containerfolder=archive;artifactname=uploadedresult;]{archiveFullPath}')
+    print(f'##vso[task.setvariable variable=tfeArchiveFileName;]{settings.tfeArchiveFileName}')
 
     # Revert working directory back
     os.chdir(currentDirectory)
@@ -131,15 +128,10 @@ def get_workspace_id(settings):
         headers={'Authorization': f'Bearer {settings.tfeToken}',
                  'Content-Type': 'application/vnd.api+json'},
     )
-
-    f = createFile('getWorkspaceIdResponse.json', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=getWorkspaceId.json;]{f}')
+    print(f'##[debug]getWorkspaceIdResponse: {resp.text}')
 
     id = resp.json()['data']['id']
-    # print(f'##vso[task.setvariable variable=tfeWorkspaceId;]{id}')
-    # set this on the setting Namespace for downstream consumption
-    vars(settings)['tfeWorkspaceId'] = id
+    vars(settings)['tfeWorkspaceId'] = id  # set this on the setting Namespace for downstream consumption
     print(f'##[command]Workspace Id Found: {id}')
     print(f'##[endgroup]')
     print()
@@ -168,21 +160,13 @@ def create_configuration_version(settings):
                  'Content-Type': 'application/vnd.api+json'},
         data=json.dumps(tfConfig)
     )
-
-    f = createFile('postConfigurationVersionRequest.json', resp.request.body)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=postConfigurationVersionRequest.json;]{f}')
-    f = createFile('postConfigurationVersionResponse.json', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=postConfigurationVersionResponse.json;]{f}')
+    print(f'##[debug]postConfigurationVersionRequest: {resp.request.body}')
+    print(f'##[debug]postConfigurationVersionResponse: {resp.text}')
 
     vars(settings)['tfeConfigurationVersionId'] = resp.json()['data']['id']
-    vars(settings)['tfeConfigurationVersionUploadUrl'] = resp.json()[
-        'data']['attributes']['upload-url']
-    print(
-        f'##[debug]tfeConfigurationVersionId: {settings.tfeConfigurationVersionId}')
-    print(
-        f'##[debug]tfeConfigurationVersionUploadUrl: {settings.tfeConfigurationVersionUploadUrl}')
+    vars(settings)['tfeConfigurationVersionUploadUrl'] = resp.json()['data']['attributes']['upload-url']
+    print(f'##[debug]tfeConfigurationVersionId: {settings.tfeConfigurationVersionId}')
+    print(f'##[debug]tfeConfigurationVersionUploadUrl: {settings.tfeConfigurationVersionUploadUrl}')
 
     print(f'##[debug]Uploading Archive to Configuration Version')
     resp = requests.put(settings.tfeConfigurationVersionUploadUrl,
@@ -229,25 +213,16 @@ def create_run_plan(settings):
                                   'Content-Type': 'application/vnd.api+json'},
                          data=json.dumps(tfConfig)
                          )
-
-    f = createFile('postCreateRunRequest.json', resp.request.body)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=postCreateRunRequest.json;]{f}')
-    f = createFile('postCreateRunResponse.json', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=postCreateRunResponse.json;]{f}')
+    print(f'##[debug]postCreateRunRequest: {resp.request.body}')
+    print(f'##[debug]postCreateRunResponse: {resp.text}')
 
     vars(settings)['tfeRunId'] = resp.json()['data']['id']
-    vars(settings)['tfePlanId'] = resp.json()[
-        'data']['relationships']['plan']['data']['id']
-    vars(settings)[
-        'tfeRunUrl'] = f'https://{settings.tfeHostName}/app/{settings.tfeOrganizationName}/{settings.tfeWorkspaceName}/runs/{settings.tfeRunId}'
+    vars(settings)['tfePlanId'] = resp.json()['data']['relationships']['plan']['data']['id']
+    vars(settings)['tfeRunUrl'] = f'https://{settings.tfeHostName}/app/{settings.tfeOrganizationName}/{settings.tfeWorkspaceName}/runs/{settings.tfeRunId}'
     print(f'##[debug]tfeRunId: {settings.tfeRunId}')
     print(f'##[debug]tfePlanId: {settings.tfePlanId}')
-    print(
-        f'##vso[task.setvariable variable=tfeRunId;]{settings.tfeRunId}')  # need to set for downstream tasks to potentially consume
-    print(
-        f'##[command]TFE Run Link: {settings.tfeRunUrl}')
+    print(f'##vso[task.setvariable variable=tfeRunId;]{settings.tfeRunId}')
+    print(f'##[command]TFE Run Link: {settings.tfeRunUrl}')
 
     print(f'##[endgroup]')
     print()
@@ -280,13 +255,8 @@ def create_run_comment(settings):
                                   'Content-Type': 'application/vnd.api+json'},
                          data=json.dumps(tfConfig)
                          )
-
-    f = createFile('postCreateRunCommentRequest.json', resp.request.body)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=postCreateRunCommentRequest.json;]{f}')
-    f = createFile('postCreateRunCommentResponse.json', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=postCreateRunCommentResponse.json;]{f}')
+    print(f'##[debug]postCreateRunCommentRequest: {resp.request.body}')
+    print(f'##[debug]postCreateRunCommentResponse: {resp.text}')
     print(f'##[debug]Comment Result: {resp}')
 
     print(f'##[endgroup]')
@@ -308,27 +278,20 @@ def wait_for_plan_complete(settings):
                         )
     currentRunStatus = resp.json()['data']['attributes']['status']
     # if relationships.cost-estimate is not present, no cost estimation
-    vars(settings)[
-        'tfeIsCostEstimate'] = 'cost-estimate' in resp.json()['data']['relationships']
+    vars(settings)['tfeIsCostEstimate'] = 'cost-estimate' in resp.json()['data']['relationships']
     if settings.tfeIsCostEstimate:
-        vars(settings)['tfeCostEstimateId'] = resp.json()[
-            'data']['relationships']['cost-estimate']['data']['id']
+        vars(settings)['tfeCostEstimateId'] = resp.json()['data']['relationships']['cost-estimate']['data']['id']
     # if relationships.policy-checks.data[] is empty, no policy checks
-    vars(settings)['tfeIsPolicyCheck'] = len(resp.json()[
-        'data']['relationships']['policy-checks']['data']) > 0
+    vars(settings)['tfeIsPolicyCheck'] = len(resp.json()['data']['relationships']['policy-checks']['data']) > 0
     if settings.tfeIsPolicyCheck:
         # TODO: Ensure there is only 1 sub 'data' policy check?
-        vars(settings)['tfePolicyCheckId'] = resp.json()[
-            'data']['relationships']['policy-checks']['data'][0]['id']
+        vars(settings)['tfePolicyCheckId'] = resp.json()['data']['relationships']['policy-checks']['data'][0]['id']
 
-    print(
-        f'##[command]Current Run Cost Estimate will occur: {settings.tfeIsCostEstimate}')
-    print(
-        f'##[command]Current Run Policy Check will occur: {settings.tfeIsPolicyCheck}')
+    print(f'##[command]Current Run Cost Estimate will occur: {settings.tfeIsCostEstimate}')
+    print(f'##[command]Current Run Policy Check will occur: {settings.tfeIsPolicyCheck}')
 
     # Loop until plan, cost estimate, and policy checks are all done (if applicable)
-    planDone = checkStatus(
-        currentRunStatus, settings.tfeIsPolicyCheck, settings.tfeIsCostEstimate)
+    planDone = checkStatus(currentRunStatus, settings.tfeIsPolicyCheck, settings.tfeIsCostEstimate)
     while planDone is False:
         time.sleep(settings.sleepInSeconds)
         resp = requests.get(f'https://{settings.tfeHostName}/api/v2/runs/{settings.tfeRunId}',
@@ -338,8 +301,7 @@ def wait_for_plan_complete(settings):
 
         currentRunStatus = resp.json()['data']['attributes']['status']
         print(f'##[debug]Current Run Status: {currentRunStatus}')
-        planDone = checkStatus(
-            currentRunStatus, settings.tfeIsPolicyCheck, settings.tfeIsCostEstimate)
+        planDone = checkStatus(currentRunStatus, settings.tfeIsPolicyCheck, settings.tfeIsCostEstimate)
     print(f'##[command]Plan has completed, status: {currentRunStatus}')
     # print(f'##[debug]aaa')
     # print(f'##[debug]aaa')
@@ -356,24 +318,19 @@ def get_run_plan_logs(settings):
                         headers={'Authorization': f'Bearer {settings.tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
+    print(f'##[debug]getPlanLogsUrlResponse: {resp.text}')
 
-    vars(settings)['planLogsUrl'] = resp.json()[
-        'data']['attributes']['log-read-url']
-    f = createFile('getPlanLogsUrlResponse.json', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=getPlanLogsUrlResponse.json;]{f}')
+    vars(settings)['planLogsUrl'] = resp.json()['data']['attributes']['log-read-url']
 
     print(f'##[command]Getting Run Plan Logs')
     resp = requests.get(settings.planLogsUrl,
                         headers={'Authorization': f'Bearer {settings.tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
-    vars(settings)['planLogs'] = resp.text
-    f = createFile('getPlanLogsResponse.txt', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=getPlanLogsResponse.txt;]{f}')
 
-    printLogs('Plan Logs', settings.planLogs)
+    vars(settings)['planLogs'] = resp.text
+    printLogs(settings.planLogs)
+
     print(f'##[endgroup]')
     print()
 
@@ -399,7 +356,7 @@ proposed-monthly-cost:      ${resp.json()['data']['attributes']['proposed-monthl
 delta-monthly-cost:         ${resp.json()['data']['attributes']['delta-monthly-cost']}/month
 """
 
-    printLogs('Cost Estimate Logs', settings.tfeCostEstimateLogs)
+    printLogs(settings.tfeCostEstimateLogs)
     print(f'##[endgroup]')
     print()
 
@@ -415,24 +372,19 @@ def get_run_policy_check_logs(settings):
                         headers={'Authorization': f'Bearer {settings.tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
+    print(f'##[debug]getPolicyCheckLogsUrlResponse: {resp.text}')
 
-    vars(settings)['policyCheckLogsUrl'] = resp.json()[
-        'data'][0]['links']['output']
-    f = createFile('getPolicyCheckLogsUrlResponse.json', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=getPolicyCheckLogsUrlResponse.json;]{f}')
+    vars(settings)['policyCheckLogsUrl'] = resp.json()['data'][0]['links']['output']
 
     print(f'##[command]Getting Run Policy Check Logs')
     resp = requests.get(f'https://{settings.tfeHostName}{settings.policyChecksLogsUrl}',
                         headers={'Authorization': f'Bearer {settings.tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
-    vars(settings)['policyCheckLogs'] = resp.text
-    f = createFile('getPolicyCheckLogsResponse.txt', resp.text)
-    print(
-        f'##vso[artifact.upload containerfolder=apicalls;artifactname=getPolicyCheckLogsResponse.txt;]{f}')
 
-    printLogs('Policy Check Logs', settings.policyCheckLogs)
+    vars(settings)['policyCheckLogs'] = resp.text
+
+    printLogs(settings.policyCheckLogs)
     print(f'##[endgroup]')
     print()
 
@@ -440,35 +392,38 @@ def get_run_policy_check_logs(settings):
 def create_summary(settings):
     print(f'##[group]Creating Summary Markdown')
 
+    summary = []
     print(f'##[command]Generating Details')
-    f = open("runsummary.md", "w")
-    f.write('## Details\n\n')
-    f.write(f'Terraform Enterprise Run: <{settings.tfeRunUrl}>\n')
-    f.write(f'Azure DevOps Build: <{settings.adoBuildLink}>\n')
-    f.write('\n')
+    summary.append('## Details\n\n')
+    if settings.tfeSpeculativePlan:
+        summary.append(f'_Speculative Plan_\n\n')
+    summary.append(f'Terraform Enterprise Run: <{settings.tfeRunUrl}>\n')
+    summary.append(f'Azure DevOps Build: <{settings.adoBuildLink}>\n')
+    summary.append('\n')
 
     if settings.tfeIsCostEstimate:
         print(f'##[command]Generating Cost Estimate logs')
-        f.write('## Cost Estimate\n\n')
-        f.write(settings.tfeCostEstimateLogs)
-        f.write('\n')
+        summary.append('## Cost Estimate\n\n')
+        summary.append(settings.tfeCostEstimateLogs)
+        summary.append('\n')
 
     print(f'##[command]Generating Plan logs')
     # remove color encodings, could pass -no-color flag but that will make the TFE output ugly...
-    tfePlanClean = re.compile(
-        r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])').sub('', settings.planLogs)
-    f.write('## Plan\n\n')
-    f.write('```\n')
-    f.write(tfePlanClean)
-    f.write('\n```\n')
+    tfePlanClean = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])').sub('', settings.planLogs)
+    summary.append('## Plan\n\n')
+    summary.append('```\n')
+    summary.append(tfePlanClean)
+    summary.append('\n```\n')
 
     if settings.tfeIsPolicyCheck:
         print(f'##[command]Generating Policy Check logs')
-        f.write('## Policy Check\n\n')
-        f.write('```\n')
-        f.write(settings.policyCheckLogs)
-        f.write('\n```\n')
+        summary.append('## Policy Check\n\n')
+        summary.append('```\n')
+        summary.append(settings.policyCheckLogs)
+        summary.append('\n```\n')
 
+    f = open("runsummary.md", "w")
+    f.writelines(summary)
     f.close()
     print(f'##vso[task.uploadsummary]{os.getcwd()}/runsummary.md')
     print(f'##[endgroup]')
@@ -476,13 +431,6 @@ def create_summary(settings):
 
 
 # Utility functions
-def createFile(filename, contents):
-    f = open(filename, "w")
-    f.write(contents)
-    f.close()
-    return f'{os.getcwd()}/{filename}'
-
-
 def checkStatus(status, tfeIsPolicyCheck, tfeIsCostEstimate):
     """
     Check the current status to determine if 1. the run is still running, 2. the run has stopped, 3. there is a final state.
@@ -528,9 +476,9 @@ def checkStatus(status, tfeIsPolicyCheck, tfeIsCostEstimate):
         return True
 
 
-def printLogs(message, logs):
+def printLogs(logs):
     print()
-    # print(f'{message}:')
+    print('#' * 80)
     print(logs)
     print('#' * 80)
 

@@ -9,8 +9,7 @@ import time
 import requests
 
 # Required, these can be set via arguments or environment variables
-parser = argparse.ArgumentParser(
-    description='Perform a TFE Run Plan.')
+parser = argparse.ArgumentParser(description='Perform a TFE Run Plan.')
 parser.add_argument('-tfeToken',
                     default=os.environ.get('TFETOKEN'),
                     help='API Token used to authenticate to TFE.')
@@ -49,6 +48,7 @@ def parse_args(parser):
         parser.print_help()
         raise
 
+    args.tfeRunId = 'run-BZCGfcuMi5u3rBDy'
     # Print arguments for debugging
     print(f'##[debug]tfeToken:{args.tfeToken}')
     print(f'##[debug]tfeHostName:{args.tfeHostName}')
@@ -79,6 +79,8 @@ def validate_run_id(settings):
                         headers={'Authorization': f'Bearer {settings.tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
+    print(f'##[debug]getRunInfoResponse: {resp.text}')
+
     if not resp.ok:
         exceptionMessage = f'TFE Run Id "{settings.tfeRunId}" is not able to be applied, message: {resp.text}'
         print(f'##[error]Invalid Run Id {exceptionMessage}')
@@ -113,6 +115,8 @@ def create_run_apply(settings):
                                   'Content-Type': 'application/vnd.api+json'},
                          data=json.dumps(tfConfig)
                          )
+    print(f'##[debug]postCreateApplyRequest: {resp.request.body}')
+    print(f'##[debug]postCreateApplyResponse: {resp.text}')
 
     if not resp.ok:
         exceptionMessage = f'Create Apply failed, message: {resp.text}'
@@ -151,10 +155,8 @@ def wait_for_apply_complete(settings):
         currentRunStatus = resp.json()['data']['attributes']['status']
         print(f'##[debug]Current Run Status: {currentRunStatus}')
         planDone = checkStatus(currentRunStatus)
-    print(f'##[command]Plan has completed, status: {currentRunStatus}')
-    # print(f'##[debug]aaa')
-    # print(f'##[debug]aaa')
 
+    print(f'##[command]Plan has completed, status: {currentRunStatus}')
     print(f'##[endgroup]')
     print()
 
@@ -167,22 +169,17 @@ def get_run_apply_logs(settings):
                         headers={'Authorization': f'Bearer {settings.tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
+    print(f'##[debug]getApplyLogsUrlResponse: {resp.text}')
 
-    vars(settings)['applyLogsUrl'] = resp.json()[
-        'data']['attributes']['log-read-url']
-    # f = createFile('getPlanLogsUrlResponse.json', resp.text)
-    # print(
-    #     f'##vso[artifact.upload containerfolder=apicalls;artifactname=getPlanLogsUrlResponse.json;]{f}')
+    vars(settings)['applyLogsUrl'] = resp.json()['data']['attributes']['log-read-url']
 
     print(f'##[command]Getting Run Apply Logs')
     resp = requests.get(settings.applyLogsUrl,
                         headers={'Authorization': f'Bearer {settings.tfeToken}',
                                  'Content-Type': 'application/vnd.api+json'},
                         )
+
     vars(settings)['applyLogs'] = resp.text
-    # f = createFile('getPlanLogsResponse.txt', resp.text)
-    # print(
-    #     f'##vso[artifact.upload containerfolder=apicalls;artifactname=getPlanLogsResponse.txt;]{f}')
 
     print(f'##[command]Getting Run Apply Logs')
     printLogs(settings.applyLogs)
@@ -193,22 +190,23 @@ def get_run_apply_logs(settings):
 def create_summary(settings):
     print(f'##[group]Creating Summary Markdown')
 
-    print(f'##[command]Generating Details')
-    f = open("applysummary.md", "w")
-    # f.write('## Details\n\n')
-    # f.write(f'Terraform Enterprise Run: <{settings.tfeRunUrl}>\n')
-    # f.write(f'Azure DevOps Build: <{settings.adoBuildLink}>\n')
-    # f.write('\n')
+    summary = []
+    # print(f'##[command]Generating Details')
+    # summary.append('## Details\n\n')
+    # summary.append(f'Terraform Enterprise Run: <{settings.tfeRunUrl}>\n')
+    # summary.append(f'Azure DevOps Build: <{settings.adoBuildLink}>\n')
+    # summary.append('\n')
 
-    print(f'##[command]Generating Apply logs')
+    print(f'##[command]Generating Plan logs')
     # remove color encodings, could pass -no-color flag but that will make the TFE output ugly...
-    tfeApplyClean = re.compile(
-        r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])').sub('', settings.applyLogs)
-    f.write('## Apply\n\n')
-    f.write('```\n')
-    f.write(tfeApplyClean)
-    f.write('\n```\n')
+    tfeApplyClean = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])').sub('', settings.applyLogs)
+    summary.append('## Apply\n\n')
+    summary.append('```\n')
+    summary.append(tfeApplyClean)
+    summary.append('\n```\n')
 
+    f = open("applysummary.md", "w")
+    f.writelines(summary)
     f.close()
     print(f'##vso[task.uploadsummary]{os.getcwd()}/applysummary.md')
     print(f'##[endgroup]')
@@ -243,6 +241,7 @@ def checkStatus(status):
 
 def printLogs(logs):
     print()
+    print('#' * 80)
     print(logs)
     print('#' * 80)
 
