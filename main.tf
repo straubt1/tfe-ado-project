@@ -1,9 +1,9 @@
-resource "random_pet" "project" {
-  length = 3
-}
+# resource "random_pet" "project" {
+#   length = 3
+# }
 
 resource "azuredevops_project" "project" {
-  project_name = random_pet.project.id
+  project_name = var.adoProjectName
   description  = "Terraform build ADO Project"
 
   # (Optional) Disable unused features

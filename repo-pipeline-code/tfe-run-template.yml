@@ -13,6 +13,10 @@ parameters:
     displayName: The working directory of the repository of the root module. Empty is root, do not prefix with './'
     type: string
     default: ""
+  # - name: token
+  #   displayName: API Token
+  #   type: string
+  #   default: ""
 
 stages:
   - stage: "TFE_Run"
@@ -20,6 +24,9 @@ stages:
     jobs:
       - job: "TFE_Run_Job"
         displayName: "Terraform Enterprise Run Job"
+        variables:
+          - name: localtfeToken
+            value: $(tfeToken)
         steps:
           # Checkout the pipeline repo, contains all the scripts need to run this file
           - checkout: terraform-pipeline
@@ -36,7 +43,8 @@ stages:
             inputs:
               scriptSource: "filePath"
               scriptPath: "terraform-pipeline/pipeline/tfe-run-plan.py"
-              arguments: "-terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }} -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
+              arguments: "-tfeToken $(tfeToken) -terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }} -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
+              # arguments: "-tfeToken ${{ parameters.token }} -terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }} -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
           - task: PythonScript@0
             condition: eq('${{ parameters.isSpeculativePlan }}', false)
             displayName: "Apply Run"

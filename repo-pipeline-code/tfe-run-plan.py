@@ -16,13 +16,13 @@ parser.add_argument('-tfeToken',
                     help='API Token used to authenticate to TFE.')
 parser.add_argument('-tfeHostName',
                     default=os.environ.get('TFEHOSTNAME'),
-                    help="TFE Hostname (i.e. terraform.company.com")
+                    help="TFE Hostname (i.e. terraform.company.com)")
 parser.add_argument('-tfeOrganizationName',
                     default=os.environ.get('TFEORGANIZATIONNAME'),
-                    help="TFE Organization Name (i.e. hashicorp-dev")
+                    help="TFE Organization Name (i.e. hashicorp-dev)")
 parser.add_argument('-tfeWorkspaceName',
                     default=os.environ.get('TFEWORKSPACENAME'),
-                    help="TFE Workspace Name (i.e. app1-eastus-dev")
+                    help="TFE Workspace Name (i.e. app1-eastus-dev)")
 parser.add_argument('-terraformWorkingDirectory',
                     default=os.environ.get('TERRAFORMWORKINGDIRECTORY'),
                     help='The path of the Terraform code based on current working directory.')

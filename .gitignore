@@ -33,3 +33,4 @@ override.tf.json
 .DS_Store
 secrets*
 loadAndRunWorkspace.sh
+.idea/
