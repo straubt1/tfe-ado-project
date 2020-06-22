@@ -1,9 +1,9 @@
-resource "random_pet" "project" {
-  length = 3
-}
+# resource "random_pet" "project" {
+#   length = 3
+# }
 
 resource "azuredevops_project" "project" {
-  project_name = random_pet.project.id
+  project_name = var.adoProjectName
   description  = "Terraform build ADO Project"
 
   # (Optional) Disable unused features
@@ -30,9 +30,8 @@ resource "azuredevops_variable_group" "tfe" {
     value = var.tfeOrganizationName
   }
   variable {
-    name  = "tfeToken"
-    value = var.tfeToken
-    # Changing this to a secret breaks...
-    # is_secret = true
+    name         = "tfeToken"
+    secret_value = var.tfeToken
+    is_secret    = true
   }
 }

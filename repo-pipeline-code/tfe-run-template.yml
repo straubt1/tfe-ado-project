@@ -12,14 +12,17 @@ parameters:
   - name: terraformWorkingDirectory
     displayName: The working directory of the repository of the root module. Empty is root, do not prefix with './'
     type: string
-    default: ''
-    
+    default: ""
+
 stages:
   - stage: "TFE_Run"
     displayName: "Terraform Enterprise Run"
     jobs:
       - job: "TFE_Run_Job"
         displayName: "Terraform Enterprise Run Job"
+        variables:
+          - name: localtfeToken
+            value: $(tfeToken)
         steps:
           # Checkout the pipeline repo, contains all the scripts need to run this file
           - checkout: terraform-pipeline
@@ -32,39 +35,15 @@ stages:
           - script: python -m pip install --upgrade pip requests
             displayName: "Install Python3 tools"
           - task: PythonScript@0
-            displayName: "Archive Terraform Code"
+            displayName: "TFE Run Plan"
             inputs:
               scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/archiveTerraform.py"
-              arguments: "-terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }}"
-          - task: PythonScript@0
-            displayName: "Get Workspace Id from TFE"
-            inputs:
-              scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/getWorkspaceId.py"
-              arguments: "-tfeToken $(tfeToken)"
-          - task: PythonScript@0
-            displayName: "Create Configuration Version"
-            inputs:
-              scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/createConfigurationVersion.py"
-              arguments: "-tfeToken $(tfeToken) -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
-          - task: PythonScript@0
-            displayName: "Create Run"
-            inputs:
-              scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/createRun.py"
-              arguments: "-tfeToken $(tfeToken)"
-          - task: PythonScript@0
-            displayName: "Monitor Run"
-            inputs:
-              scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/monitorRun.py"
-              arguments: "-tfeToken $(tfeToken)"
+              scriptPath: "terraform-pipeline/pipeline/tfe-run-plan.py"
+              arguments: "-tfeToken $(tfeToken) -terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }} -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }}"
           - task: PythonScript@0
             condition: eq('${{ parameters.isSpeculativePlan }}', false)
             displayName: "Apply Run"
             inputs:
               scriptSource: "filePath"
-              scriptPath: "terraform-pipeline/pipeline/applyRun.py"
+              scriptPath: "terraform-pipeline/pipeline/tfe-run-apply.py"
               arguments: "-tfeToken $(tfeToken)"

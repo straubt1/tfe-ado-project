@@ -1,22 +1,22 @@
 # trigger:
 #   branches:
-#     include: 
+#     include:
 #       - feature/*
 trigger: none
 pr:
- branches:
-  include:
-    - master
+  branches:
+    include:
+      - master
 
 resources:
   repositories:
     - repository: terraform-pipeline
       type: Git
-      name: eminently-suitable-kingfish/terraform-pipeline
+      name: terraform-tfe-ado/terraform-pipeline
       ref: master
 
 variables:
-  - group: 'TFE Variable Group'
+  - group: "TFE Variable Group"
 
 pool:
   vmImage: "ubuntu-latest"
@@ -25,6 +25,5 @@ extends:
   template: pipeline/tfe-run-template.yml@terraform-pipeline
   parameters:
     isSpeculativePlan: True
-    # tfeTokenParam: $(tfeToken)
     # tfeWorkspaceName: "ado-demo"
     # terraformWorkingDirectory: ''

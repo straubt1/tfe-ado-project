@@ -8,7 +8,7 @@ Now that there is an official [Azure Devops Terraform Provider](https://www.terr
 
 The root of this repository contains Terraform to deploy the following:
 
-- ADO Project
+- ADO Project `terraform-tfe-ado`
 - ADO Git Repo `terraform-pipeline`
   - Repo is seeded from the folder `./repo-pipeline-code`
   - Contains all the pipeline templates and python scripts
@@ -46,13 +46,13 @@ export TFE_HOSTNAME=<Your Hostname of TFE, or app.terraform.io if TFC>
 export TFE_TOKEN=<Your TFE API Token>
 ```
 
-> NOTE: Update the `./repo-terraform-code/ci/tfe-*.yml` files to include the the right ADO Project name.
+> NOTE: Update the `./repo-terraform-code/ci/tfe-*.yml` files to include the the right ADO Project name if it doesn't match.
 
 ### Terraform
 
 After successfully running the Terraform you should be able to navigate to ADO and TFE to begin running workflows.
 
-Azure DevOps New project, note the dynamic pet name:
+Azure DevOps New project:
 
 ![](images/ado-new-project.png)
 
