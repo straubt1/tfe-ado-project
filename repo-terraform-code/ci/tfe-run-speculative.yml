@@ -25,6 +25,5 @@ extends:
   template: pipeline/tfe-run-template.yml@terraform-pipeline
   parameters:
     isSpeculativePlan: True
-    # token: $(tfeToken)
     # tfeWorkspaceName: "ado-demo"
     # terraformWorkingDirectory: ''
