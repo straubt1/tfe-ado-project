@@ -33,6 +33,9 @@ parser.add_argument('-tfeArchiveFileName',
 parser.add_argument('-tfeSpeculativePlan',
                     default='False',
                     help="When True, trigger a speculative plan that can not be applied.")
+parser.add_argument('-tfeDestroyPlan',
+                    default='False',
+                    help="When True, trigger a destroy plan.")
 
 
 def parse_args(parser):
@@ -57,8 +60,7 @@ def parse_args(parser):
         raise
     # Print arguments for debugging
     print(f'##[debug]tfeArchiveFileName:{args.tfeArchiveFileName}')
-    print(
-        f'##[debug]terraformWorkingDirectory:{args.terraformWorkingDirectory}')
+    print(f'##[debug]terraformWorkingDirectory:{args.terraformWorkingDirectory}')
     print(f'##[debug]tfeToken:{args.tfeToken}')
     print(f'##[debug]tfeHostName:{args.tfeHostName}')
     print(f'##[debug]tfeOrganizationName:{args.tfeOrganizationName}')
@@ -67,6 +69,7 @@ def parse_args(parser):
     # Update in case ADO boolean matching causes issues
     args.tfeSpeculativePlan = json.loads(args.tfeSpeculativePlan.lower())
     print(f'##[debug]tfeSpeculativePlan:{args.tfeSpeculativePlan}')
+    print(f'##[debug]tfeDestroyPlan:{args.tfeDestroyPlan}')
 
     # Build specific values
     args.adoBuildLink = f'{os.environ["SYSTEM_TEAMFOUNDATIONSERVERURI"]}{os.environ["SYSTEM_TEAMPROJECT"]}/_build/results?buildId={os.environ["BUILD_BUILDID"]}'
@@ -186,7 +189,7 @@ def create_run_plan(settings):
         "data": {
             "type": "runs",
             "attributes": {
-                "is-destroy": False,
+                "is-destroy": settings.tfeDestroyPlan,
                 "message": "ADO Triggered Build"
             },
             "relationships": {

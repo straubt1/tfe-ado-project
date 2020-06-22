@@ -48,7 +48,6 @@ def parse_args(parser):
         parser.print_help()
         raise
 
-    args.tfeRunId = 'run-BZCGfcuMi5u3rBDy'
     # Print arguments for debugging
     print(f'##[debug]tfeToken:{args.tfeToken}')
     print(f'##[debug]tfeHostName:{args.tfeHostName}')
