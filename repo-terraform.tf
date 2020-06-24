@@ -150,3 +150,66 @@ resource "azuredevops_branch_policy_build_validation" "terraform-pr" {
 #   resource_id = azuredevops_build_definition.plan-speculative.id
 #   authorized  = true
 # }
+
+resource "null_resource" "pipeline-perm-plan-apply" {
+  triggers = {
+    id = azuredevops_build_definition.plan-apply.id
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+id=${azuredevops_build_definition.plan-apply.id}
+payload="{ \"pipelines\": [{ \"id\": $id, \"authorized\": true }]}"
+echo $id
+echo $payload
+curl \
+  -u tstraub:$AZDO_PERSONAL_ACCESS_TOKEN \
+  -H "Content-Type: application/json" \
+  --request PATCH \
+  --data "$payload" \
+  $AZDO_ORG_SERVICE_URL/${azuredevops_project.project.project_name}/_apis/pipelines/pipelinePermissions/repository/${azuredevops_git_repository.pipeline.project_id}.${azuredevops_git_repository.pipeline.id}?api-version=5.1-preview.1 | jq .
+EOF
+  }
+}
+
+resource "null_resource" "pipeline-perm-plan-speculative" {
+  triggers = {
+    id = azuredevops_build_definition.plan-speculative.id
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+id=${azuredevops_build_definition.plan-speculative.id}
+payload="{ \"pipelines\": [{ \"id\": $id, \"authorized\": true }]}"
+echo $id
+echo $payload
+curl \
+  -u tstraub:$AZDO_PERSONAL_ACCESS_TOKEN \
+  -H "Content-Type: application/json" \
+  --request PATCH \
+  --data "$payload" \
+  $AZDO_ORG_SERVICE_URL/${azuredevops_project.project.project_name}/_apis/pipelines/pipelinePermissions/repository/${azuredevops_git_repository.pipeline.project_id}.${azuredevops_git_repository.pipeline.id}?api-version=5.1-preview.1 | jq .
+EOF
+  }
+}
+
+resource "null_resource" "pipeline-perm-destroy" {
+  triggers = {
+    id = azuredevops_build_definition.destroy.id
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+id=${azuredevops_build_definition.destroy.id}
+payload="{ \"pipelines\": [{ \"id\": $id, \"authorized\": true }]}"
+echo $id
+echo $payload
+curl \
+  -u tstraub:$AZDO_PERSONAL_ACCESS_TOKEN \
+  -H "Content-Type: application/json" \
+  --request PATCH \
+  --data "$payload" \
+  $AZDO_ORG_SERVICE_URL/${azuredevops_project.project.project_name}/_apis/pipelines/pipelinePermissions/repository/${azuredevops_git_repository.pipeline.project_id}.${azuredevops_git_repository.pipeline.id}?api-version=5.1-preview.1 | jq .
+EOF
+  }
+}
