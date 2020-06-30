@@ -1,12 +1,5 @@
-# trigger:
-#   branches:
-#     include:
-#       - feature/*
 trigger: none
-pr:
-  branches:
-    include:
-      - master
+pr: none
 
 resources:
   repositories:
@@ -22,8 +15,6 @@ pool:
   vmImage: "ubuntu-latest"
 
 extends:
-  template: pipeline/tfe-run-template.yml@terraform-pipeline
+  template: pipeline/tfe-destroy-template.yml@terraform-pipeline
   parameters:
     isSpeculativePlan: True
-    # tfeWorkspaceName: "ado-demo"
-    # terraformWorkingDirectory: ''

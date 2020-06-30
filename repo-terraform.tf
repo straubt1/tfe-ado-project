@@ -19,7 +19,7 @@ resource "null_resource" "terraform-repo-import" {
   # Any change to the directory will cause this to fire
   triggers = {
     check = join("", [
-      for file in fileset("${abspath(path.module)}/repo-terraform-code", "*") : filemd5(format("%s/repo-terraform-code/%s", abspath(path.module), file))
+      for file in fileset("${abspath(path.module)}/repo-terraform-code/", "**") : filemd5(format("%s/repo-terraform-code/%s", abspath(path.module), file))
     ])
     force = timestamp()
   }
@@ -87,12 +87,6 @@ resource "azuredevops_build_definition" "plan-speculative" {
     name  = "tfeWorkspaceName"
     value = tfe_workspace.terraform.name
   }
-
-  # variable {
-  #   name  = "tfeToken"
-  #   value = var.tfeToken
-  #   # is_secret = true
-  # }
 }
 
 resource "azuredevops_build_definition" "destroy" {
@@ -120,6 +114,31 @@ resource "azuredevops_build_definition" "destroy" {
   }
 }
 
+resource "azuredevops_build_definition" "destroy-speculative" {
+  project_id = azuredevops_project.project.id
+  name       = "Terraform Pipeline - Destroy Speculative"
+
+  repository {
+    repo_type   = "TfsGit"
+    repo_id     = azuredevops_git_repository.terraform.id
+    branch_name = azuredevops_git_repository.terraform.default_branch
+    yml_path    = "ci/tfe-destroy-speculative.yml"
+  }
+
+  ci_trigger {
+    use_yaml = true
+  }
+
+  variable_groups = [
+    azuredevops_variable_group.tfe.id
+  ]
+
+  variable {
+    name  = "tfeWorkspaceName"
+    value = tfe_workspace.terraform.name
+  }
+}
+
 # ADO git repo's do not support `pr` triggers via .yml
 # So we must use the branch policy to trigger a speculative plan
 # On a PR into the default branch
@@ -128,7 +147,7 @@ resource "azuredevops_branch_policy_build_validation" "terraform-pr" {
 
   # Setting this to true will block all master pushes
   # But we need to be able to push code from this terraform run
-  enabled  = false
+  enabled  = true
   blocking = false
 
   settings {
@@ -213,3 +232,25 @@ curl \
 EOF
   }
 }
+
+resource "null_resource" "pipeline-perm-destroy-speculative" {
+  triggers = {
+    id = azuredevops_build_definition.destroy-speculative.id
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+id=${azuredevops_build_definition.destroy-speculative.id}
+payload="{ \"pipelines\": [{ \"id\": $id, \"authorized\": true }]}"
+echo $id
+echo $payload
+curl \
+  -u tstraub:$AZDO_PERSONAL_ACCESS_TOKEN \
+  -H "Content-Type: application/json" \
+  --request PATCH \
+  --data "$payload" \
+  $AZDO_ORG_SERVICE_URL/${azuredevops_project.project.project_name}/_apis/pipelines/pipelinePermissions/repository/${azuredevops_git_repository.pipeline.project_id}.${azuredevops_git_repository.pipeline.id}?api-version=5.1-preview.1 | jq .
+EOF
+  }
+}
+

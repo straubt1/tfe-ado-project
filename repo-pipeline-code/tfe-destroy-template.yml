@@ -30,8 +30,9 @@ stages:
             inputs:
               scriptSource: "filePath"
               scriptPath: "terraform-pipeline/pipeline/tfe-run-plan.py"
-              arguments: "-terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }} -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }} -tfeDestroyPlan True"
+              arguments: "-tfeToken $(tfeToken) -terraformWorkingDirectory ./$(Build.Repository.Name)/${{ parameters.terraformWorkingDirectory }} -tfeSpeculativePlan ${{ parameters.isSpeculativePlan }} -tfeDestroyPlan True"
           - task: PythonScript@0
+            condition: eq('${{ parameters.isSpeculativePlan }}', false)
             displayName: "Apply Destroy Run"
             inputs:
               scriptSource: "filePath"
