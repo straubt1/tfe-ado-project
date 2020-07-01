@@ -1,3 +1,6 @@
+# Create the AzDO Git Repo to hold our pipeline code that can be reused
+# Import our pipeline code into the repo
+
 resource "azuredevops_git_repository" "pipeline" {
   project_id = azuredevops_project.project.id
   name       = "terraform-pipeline"
@@ -10,12 +13,12 @@ resource "azuredevops_git_repository" "pipeline" {
 # Sync this repo's subfolder to the ADO git repo
 resource "null_resource" "pipeline-repo-import" {
   # Complexity to checksum all the files in the directory and join them into a string
-  # Any change to the directory will cause this to fire
+  # Any change to the directory will cause this to trigger
   triggers = {
-    check = join("", [
+    file_contents = join("", [
       for file in fileset("${abspath(path.module)}/repo-pipeline-code/", "**") : filemd5(format("%s/repo-pipeline-code/%s", abspath(path.module), file))
     ])
-    # force = timestamp()
+    files = join("", fileset("${abspath(path.module)}/repo-pipeline-code/", "**"))
   }
 
   provisioner "local-exec" {
