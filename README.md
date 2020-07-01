@@ -18,15 +18,18 @@ The root of this repository contains Terraform to deploy the following:
   - Contains the pipeline .yml that references the templates in the other repo
 - TFE Workspace `ado-terraform-dev`
   - Will be the workspace the Build Pipelines integrate with
-- ADO Build Pipeline `Terraform Pipeline - Run Speculative`
+- ADO Build Pipeline `Terraform Pipeline - Plan`
   - Integrates to the TFE Workspace
-  - Performs a Speculative Plan
-- ADO Build Pipeline `Terraform Pipeline - Run Apply`
+  - Performs a Speculative Plan but does **not** apply
+- ADO Build Pipeline `Terraform Pipeline - Plan and Apply`
   - Integrates to the TFE Workspace
-  - Performs a Plan and Auto Apply
+  - Performs a Plan and then Auto Applies assuming no errors/policy failures
 - ADO Build Pipeline `Terraform Pipeline - Destroy`
   - Integrates to the TFE Workspace
-  - Performs a Destroy and Auto Apply
+  - Performs a Speculative Destroy but does **not** apply
+- ADO Build Pipeline `Terraform Pipeline - Destroy and Apply`
+  - Integrates to the TFE Workspace
+  - Performs a Destroy Plan and then Auto Applies assuming no errors/policy failures
 
 ### Getting Started
 
@@ -68,12 +71,6 @@ Trigger the Build Pipeline "Terraform Pipeline - Run Speculative":
 
 ![](images/ado-tfe-speculative-build.png)
 
-**Manual Step**
-
-On the first trigger of the Build Pipeline you will have to "Permit" the pipeline to communicate with the `terraform-pipeline` repo:
-
-![](images/ado-terraform-pipeline-permit.png)
-
 View the Pipeline execution and wait for it to complete:
 
 ![](images/ado-build-execution.png)
@@ -102,6 +99,12 @@ This repository leverages python as the underlying scripting language, in the ho
 ## Current Limitations
 
 - Pull request triggers not supported with Azure Repos, more info [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/troubleshooting/troubleshooting?view=azure-devops#pull-request-triggers-not-supported-with-azure-repos)
+
+- Manual Step required to allow pipeline to access another repo in the same project.
+
+On the first trigger of the Build Pipeline you will have to "Permit" the pipeline to communicate with the `terraform-pipeline` repo:
+
+![](images/ado-terraform-pipeline-permit.png)
 
 ## Resources
 

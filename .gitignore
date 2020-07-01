@@ -34,3 +34,4 @@ override.tf.json
 secrets*
 loadAndRunWorkspace.sh
 .idea/
+bugs/
