@@ -68,6 +68,7 @@ def parse_args(parser):
 
     # Update in case ADO boolean matching causes issues
     args.tfeSpeculativePlan = json.loads(args.tfeSpeculativePlan.lower())
+    args.tfeDestroyPlan = json.loads(args.tfeDestroyPlan.lower())
     print(f'##[debug]tfeSpeculativePlan:{args.tfeSpeculativePlan}')
     print(f'##[debug]tfeDestroyPlan:{args.tfeDestroyPlan}')
 

@@ -1,4 +1,9 @@
-trigger:
+# trigger:
+#   branches:
+#     include:
+#       - feature/*
+trigger: none
+pr:
   branches:
     include:
       - master
@@ -7,7 +12,7 @@ resources:
   repositories:
     - repository: terraform-pipeline
       type: Git
-      name: terraform-tfe-ado/terraform-pipeline
+      name: terraform-pipeline
       ref: master
 
 variables:
@@ -19,5 +24,6 @@ pool:
 extends:
   template: pipeline/tfe-run-template.yml@terraform-pipeline
   parameters:
-    isSpeculativePlan: False
+    isSpeculativePlan: True
+    # tfeWorkspaceName: "ado-demo"
     # terraformWorkingDirectory: ''

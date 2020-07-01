@@ -1,6 +1,4 @@
-# resource "random_pet" "project" {
-#   length = 3
-# }
+# Create the AzDO Project and a variable group to be used with pipelines
 
 resource "azuredevops_project" "project" {
   project_name = var.adoProjectName
